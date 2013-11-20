@@ -229,7 +229,7 @@ sub _when_checkedout_by_others {
     
     my %params;
     require MT::Entry;
-    my $type = $app->param( 'type' ) || MT::Entry->class_type;
+    my $type = $app->param( '_type' ) || MT::Entry->class_type;
     my $pkg = $app->model( $type ) or return "Invalid request.";
     $params{ entry_loop }           = \@data;
     $params{ object_type }          = $type;
@@ -270,7 +270,7 @@ sub _when_not_checkedout_yet {
     
     my %params;
     require MT::Entry;
-    my $type = $app->param( 'type' ) || MT::Entry->class_type;
+    my $type = $app->param( '_type' ) || MT::Entry->class_type;
     my $pkg = $app->model( $type ) or return "Invalid request.";
     $params{ entry_loop }           = \@data;
     $params{ object_type }          = $type;
@@ -394,7 +394,7 @@ sub _list_props_entry {
                     undef,
                     {
                         object_id   => \'= entry_id',
-                        object_ds   => 'entry',
+                        object_ds   => $prop->datasource->datasource,
                         $blog ? ( blog_id => $blog_id ) : (),
                     },
                     {
@@ -436,7 +436,7 @@ sub _list_props_entry {
                     undef,
                     {
                         object_id   => \'= entry_id',
-                        object_ds   => 'entry',
+                        object_ds   => $prop->datasource->datasource,
                         $blog ? ( blog_id => $blog_id ) : (),
                         author_id   => $author_id,
                     },
@@ -451,13 +451,18 @@ sub _list_props_entry {
 sub _filter_entry_checkout {
     my $app = MT->instance;
     my $user = $app->user or return {};
-    my $type = $app->param( '_type' ) || 'entry';
+    my $type = $app->param( '_type' ) || $app->param( 'datasource' );
+    my $label = $type eq 'entry' ?
+        'Entry' :
+            $type eq 'page' ?
+                'Page' :
+                    'Object';
     my $plugin = MT->component( 'Checkout' );
     return {
         condition   => sub {
             return defined( $user ) ? 1 : 0;
         },
-        label       => $plugin->translate( 'Checked-out [_1]', $app->translate( $type ) ),
+        label       => $plugin->translate( 'Checked-out [_1]', $app->translate( $label ) ),
         items       => [
             {
                 type    => 'checkout_author_id',
