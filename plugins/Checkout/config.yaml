@@ -75,4 +75,6 @@ list_actions:
             label: Check-in
             code: $checkout::Checkout::Plugin::_list_action_checkin_entry
 
-
+backup_instructions:
+    checkout:
+        skip: 1
