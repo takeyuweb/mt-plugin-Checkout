@@ -397,7 +397,6 @@ sub _list_props_entry {
                         $blog ? ( blog_id => $blog_id ) : (),
                     },
                     {
-                        fetchonly   => { author_id => 1 },
                         joins       => [
                             MT->model( 'author' )->join_on(
                                 undef,
@@ -405,9 +404,9 @@ sub _list_props_entry {
                                     {id => \'= checkout_author_id'},
                                     ( '-and' ),
                                     [
-                                    $name_query,
-                                    ( $args->{ 'option' } eq 'not_contains' ? '-and' : '-or' ),
-                                    $nickname_query,
+                                        $name_query,
+                                        ( $args->{ 'option' } eq 'not_contains' ? '-and' : '-or' ),
+                                        $nickname_query,
                                     ]
                                 ],
                                 {
