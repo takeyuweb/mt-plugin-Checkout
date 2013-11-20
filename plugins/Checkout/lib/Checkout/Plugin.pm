@@ -381,7 +381,8 @@ sub _list_props_entry {
             terms           => sub {
                 my $prop = shift;
                 my ( $args, $db_terms, $db_args ) = @_;
-                my $blog = MT->app->blog;
+                my $app = MT->app or return;
+                my $blog = $app->blog;
                 my $blog_id = $blog ? $blog->id : undef;
                 $prop->{col} = 'name';
                 my $name_query = $prop->super( @_ );
@@ -417,6 +418,32 @@ sub _list_props_entry {
                 );
                 return;
             },
+        },
+        checkout_author_id  => {
+            base            => '__virtual.hidden',
+            display         => 'none',
+            filter_editable => 0,
+            terms => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $app = MT->app or return;
+                my $blog = $app->blog;
+                my $blog_id = $blog ? $blog->id : undef;
+                my $class = $prop->datasource;
+                my $author_id = $args->{ value };
+                $db_args->{joins} ||= [];
+                push @{ $db_args->{joins} }, MT->model( 'checkout' )->join_on(
+                    undef,
+                    {
+                        object_id   => \'= entry_id',
+                        object_ds   => 'entry',
+                        $blog ? ( blog_id => $blog_id ) : (),
+                        author_id   => $author_id,
+                    },
+                );
+                return;
+            },
+            
         }
     };
 }
@@ -433,8 +460,10 @@ sub _filter_entry_checkout {
         label       => $plugin->translate( 'Checked-out [_1]', $app->translate( $type ) ),
         items       => [
             {
-                type    => 'checkedout_by',
-                value   => $user->id,
+                type    => 'checkout_author_id',
+                args    => {
+                    value   => $user->id,
+                }
             }
         ]
     };
