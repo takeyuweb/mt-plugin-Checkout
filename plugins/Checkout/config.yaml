@@ -20,6 +20,8 @@ callbacks:
     MT::App::CMS::cms_pre_save.page: $checkout::Checkout::Plugin::_cb_cms_pre_save_object
     MT::App::CMS::cms_post_save.entry: $checkout::Checkout::Plugin::_cb_cms_post_save_object
     MT::App::CMS::cms_post_save.page: $checkout::Checkout::Plugin::_cb_cms_post_save_object
+    MT::App::CMS::template_source.entry_list_header: $checkout::Checkout::Plugin::_cb_ts_entry_list_header
+    MT::App::CMS::template_param.entry_list_header: $checkout::Checkout::Plugin::_cb_tp_entry_list_header
 
 applications:
     cms:
@@ -40,4 +42,37 @@ system_filters:
         checkout: $checkout::Checkout::Plugin::_filter_entry_checkout
     page:
         checkout: $checkout::Checkout::Plugin::_filter_entry_checkout
+
+list_actions:
+    entry:
+        checkout:
+            label: Check-out
+            code: $checkout::Checkout::Plugin::_list_action_checkout_entry
+        force_checkout:
+            label: Check-out (Allow override)
+            code: $checkout::Checkout::Plugin::_list_action_force_checkout_entry
+            continue_prompt_handler: >
+                sub {
+                    my $plugin = MT->component( 'Checkout' );
+                    $plugin->translate( "That you want to override the check out, there is a risk of losing the other user's changes." )
+                }
+        checkin:
+            label: Check-in
+            code: $checkout::Checkout::Plugin::_list_action_checkin_entry
+    page:
+        checkout:
+            label: Check-out
+            code: $checkout::Checkout::Plugin::_list_action_checkout_entry
+        force_checkout:
+            label: Check-out (Allow override)
+            continue_prompt_handler: >
+                sub {
+                    my $plugin = MT->component( 'Checkout' );
+                    $plugin->translate( "That you want to override the check out, there is a risk of losing the other user's changes." )
+                }
+            code: $checkout::Checkout::Plugin::_list_action_force_checkout_entry
+        checkin:
+            label: Check-in
+            code: $checkout::Checkout::Plugin::_list_action_checkin_entry
+
 

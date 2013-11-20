@@ -8,35 +8,46 @@ sub _cb_ts_edit_entry {
     my $checkout_msg = <<'MTML';
 <__trans_section component="Checkout">
     <mt:if name="checkedout_by_user">
-    <mtapp:statusmsg
-        id="checkout"
-        class="success">
-        <__trans phrase="It is checked-out at [_1]." params="<$MTDate ts='$checkedout_on_ts' relative='1' format='%b %e %Y'$>" />
-        <mt:Unless name="reedit">
-            <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=uncheckout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"><__trans phrase="Undo" /></a>
-        </mt:Unless>
-    </mtapp:statusmsg>
+        <mtapp:statusmsg
+            id="checkout"
+            class="success">
+            <__trans phrase="It is checked-out at [_1]." params="<$MTDate ts='$checkedout_on_ts' relative='1' format='%b %e %Y'$>" />
+            <mt:Unless name="reedit">
+                <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=uncheckout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"><__trans phrase="Undo" /></a>
+            </mt:Unless>
+        </mtapp:statusmsg>
     </mt:if>
     <mt:if name="checkedout_by_others">
-    <mtapp:statusmsg
-        id="checkout"
-        class="error">
-        <__trans phrase="By [_2], this was checked out at [_1]." params="<$MTDate ts='$checkedout_on_ts' relative='1' format='%b %e %Y'$>%%<$mt:var name='checkedout_author_nickname' escape='html'$>(<a href="mailto:<$mt:var name='checkedout_author_email' escape='html'$>"><$mt:var name='checkedout_author_email' escape='html'$></a>)" />
-        <mt:Unless name="reedit">
-            <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=force_checkout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"
-               onclick="return confirm('<__trans phrase="That you want to override the check out, there is a risk of losing the other user's changes." escape="js">');"><__trans phrase="Override" /></a>
-        </mt:Unless>
-    </mtapp:statusmsg>
+        <mtapp:statusmsg
+            id="checkout"
+            class="error">
+            <__trans phrase="By [_2], this was checked out at [_1]." params="<$MTDate ts='$checkedout_on_ts' relative='1' format='%b %e %Y'$>%%<$mt:var name='checkedout_author_nickname' escape='html'$>(<a href="mailto:<$mt:var name='checkedout_author_email' escape='html'$>"><$mt:var name='checkedout_author_email' escape='html'$></a>)" />
+            <mt:Unless name="reedit">
+                <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=force_checkout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"
+                   onclick="return confirm('<__trans phrase="That you want to override the check out, there is a risk of losing the other user's changes." escape="js">');"><__trans phrase="Override" /></a>
+            </mt:Unless>
+        </mtapp:statusmsg>
     </mt:if>
     <mt:if name="not_checkedout_yet">
-    <mtapp:statusmsg
-        id="checkout"
-        class="info">
-        <__trans phrase="It is not checked-out yet." />
-        <mt:Unless name="reedit">
-            <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=checkout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"><__trans phrase="Checkout" /></a>
-        </mt:Unless>
-    </mtapp:statusmsg>
+        <mt:if name="saved_changes">
+            <mtapp:statusmsg
+                id="checkout"
+                class="success">
+                <__trans phrase="Checked-in now." />
+                <mt:Unless name="reedit">
+                    <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=checkout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"><__trans phrase="Checkout" /></a>
+                </mt:Unless>
+            </mtapp:statusmsg>
+        <mt:else>
+            <mtapp:statusmsg
+                id="checkout"
+                class="info">
+                <__trans phrase="It is not checked-out yet." />
+                <mt:Unless name="reedit">
+                    <a href="<$mt:var name='script_url'$>?id=<$mtvar name='id' escape='html'$>&blog_id=<$mtvar name='blog_id'$>&__mode=checkout&_type=<$mt:var name='object_type'$>&magic_token=<$mt:var name='magic_token'$>"><__trans phrase="Checkout" /></a>
+                </mt:Unless>
+            </mtapp:statusmsg>
+        </mt:if>
     </mt:if>
 </__trans_section>
 MTML
@@ -472,6 +483,114 @@ sub _filter_entry_checkout {
             }
         ]
     };
+}
+
+sub _list_action_checkin_entry {
+    my $app = shift;
+    $app->setup_filtered_ids
+        unless $app->param( 'all_selected' );
+    my $user = $app->user or
+        return $app->trans_error( 'Invalid request.' );
+    my $type = $app->param( '_type' ) || 'entry';
+    my $class = MT->model( $type );
+    my @ids = $app->param( 'id' );
+    my $uncheckout_count = 0;
+    for my $id ( @ids ) {
+        my $object = $class->load( $id );
+        next unless $object;
+        return $app->permission_denied()
+            unless $user->permissions( $object->blog_id )->can_edit_entry( $object, $user );
+        $uncheckout_count++ if uncheckout( $object );
+    }
+    $app->add_return_arg( uncheckedout => 1, uncheckout_count => $uncheckout_count );
+    return $app->call_return();
+}
+
+sub _list_action_checkout_entry {
+    my $app = shift;
+    __list_action_checkout_entry( $app );
+}
+
+sub _list_action_force_checkout_entry {
+    my $app = shift;
+    __list_action_checkout_entry( $app, 1 );
+}
+
+sub __list_action_checkout_entry {
+    my $app = shift;
+    my ( $force ) = @_;
+    $app->setup_filtered_ids
+        unless $app->param( 'all_selected' );
+    my $user = $app->user or
+        return $app->trans_error( 'Invalid request.' );
+    my $type = $app->param( '_type' ) || 'entry';
+    my $class = MT->model( $type );
+    my @ids = $app->param( 'id' );
+    my $checkout_count = 0;
+    for my $id ( @ids ) {
+        my $object = $class->load( $id );
+        next unless $object;
+        return $app->permission_denied()
+            unless $user->permissions( $object->blog_id )->can_edit_entry( $object, $user );
+        $checkout_count++ if checkout( $object, $force );
+    }
+    $app->add_return_arg( checkedout => 1, checkout_count => $checkout_count );
+    return $app->call_return();
+}
+
+sub _cb_ts_entry_list_header {
+    my ( $cb, $app, $tmpl_ref ) = @_;
+    my $mtml = <<'MTML';
+<mt:setvarblock name="system_msg" append="1">
+<__trans_section component="Checkout">
+<div id="msg-container">
+    <mt:if name="request.checkedout">
+        <mt:if name="request.checkout_count" gt="0">
+            <mtapp:statusmsg
+                id="checkedout"
+                class="success"
+                rebuild="">
+                <__trans phrase="Checked-out of the [_1] [_2].", params="<MTVar name='object_label_plural'>%%<MTVar name='request.checkout_count'>">
+            </mtapp:statusmsg>
+        <mt:else>
+            <mtapp:statusmsg
+                id="checkedout"
+                class="error"
+                rebuild="">
+                <__trans phrase="[_1] can be checked-out does not exist.", params="<MTVar name='object_label_plural'>">
+            </mtapp:statusmsg>
+        </mt:if>
+    </mt:if>
+    <mt:if name="request.uncheckedout">
+        <mt:if name="request.uncheckout_count" gt="0">
+            <mtapp:statusmsg
+                id="checkedout"
+                class="success"
+                rebuild="">
+                <__trans phrase="Checked-in of the [_1] [_2].", params="<MTVar name='object_label_plural'>%%<MTVar name='request.uncheckout_count'>">
+            </mtapp:statusmsg>
+        <mt:else>
+            <mtapp:statusmsg
+                id="checkedout"
+                class="error"
+                rebuild="">
+                <__trans phrase="[_1] can be checked-in does not exist.", params="<MTVar name='object_label_plural'>">
+            </mtapp:statusmsg>
+        </mt:if>
+    </mt:if>
+</div>
+</__trans_section>
+</mt:setvarblock>
+MTML
+    $$tmpl_ref .= $mtml;
+    1;
+}
+
+sub _cb_tp_entry_list_header {
+    my ( $cb, $app, $param, $tmpl ) = @_;
+    my $type = $app->param( '_type' ) || 'entry';
+    my $pkg = $app->model( $type ) or return;
+    $param->{ object_label_plural }  = $pkg->class_label_plural;
 }
 
 1;
