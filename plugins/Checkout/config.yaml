@@ -28,3 +28,10 @@ applications:
             save_entry_with_checkout: $checkout::Checkout::Plugin::_save_entry_with_checkout
             when_checkedout_by_others: $checkout::Checkout::Plugin::_when_checkedout_by_others
             when_not_checkedout_yet: $checkout::Checkout::Plugin::_when_not_checkedout_yet
+
+list_properties:
+    entry: $checkout::Checkout::Plugin::_list_props_entry
+
+system_filters:
+    entry:
+        checkout: $checkout::Checkout::Plugin::_filter_entry_checkout

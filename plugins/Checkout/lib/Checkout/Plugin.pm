@@ -362,4 +362,83 @@ sub checkedout_by_others {
     $checkout->author_id != $app->user->id;
 }
 
+sub _list_props_entry {
+    my $app    = MT->instance;
+    my $plugin = MT->component( 'Checkout' );
+    return {
+        checkedout_by   => {
+            label   => $plugin->translate( 'Check-out User' ),
+            base    => '__virtual.string',
+            auto    => 1,
+            display => 'default',
+            order   => 250,
+            html    => sub {
+                my ( $prop, $obj, $app ) = @_;
+                my $checkout = MT->model( 'checkout' )->fetch_by_object( $obj );
+                return $checkout ? $checkout->author_nickname : '-';
+            },
+            filter_label    => 'Check-out User',
+            terms           => sub {
+                my $prop = shift;
+                my ( $args, $db_terms, $db_args ) = @_;
+                my $blog = MT->app->blog;
+                my $blog_id = $blog ? $blog->id : undef;
+                $prop->{col} = 'name';
+                my $name_query = $prop->super( @_ );
+                $prop->{col} = 'nickname';
+                my $nickname_query = $prop->super( @_ );
+                my $author_name  = $args->{ string };
+                $db_args->{joins} ||= [];
+                push @{ $db_args->{joins} }, MT->model( 'checkout' )->join_on(
+                    undef,
+                    {
+                        object_id   => \'= entry_id',
+                        object_ds   => 'entry',
+                        $blog ? ( blog_id => $blog_id ) : (),
+                    },
+                    {
+                        fetchonly   => { author_id => 1 },
+                        joins       => [
+                            MT->model( 'author' )->join_on(
+                                undef,
+                                [
+                                    {id => \'= checkout_author_id'},
+                                    ( '-and' ),
+                                    [
+                                    $name_query,
+                                    ( $args->{ 'option' } eq 'not_contains' ? '-and' : '-or' ),
+                                    $nickname_query,
+                                    ]
+                                ],
+                                {
+                                    unique => 1
+                                } )
+                        ]
+                    },
+                );
+                return;
+            },
+        }
+    };
+}
+
+sub _filter_entry_checkout {
+    my $app = MT->instance;
+    my $user = $app->user or return {};
+    my $type = $app->param( '_type' ) || 'entry';
+    my $plugin = MT->component( 'Checkout' );
+    return {
+        condition   => sub {
+            return defined( $user ) ? 1 : 0;
+        },
+        label       => $plugin->translate( 'Checked-out [_1]', $app->translate( $type ) ),
+        items       => [
+            {
+                type    => 'checkedout_by',
+                value   => $user->id,
+            }
+        ]
+    };
+}
+
 1;

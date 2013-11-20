@@ -20,6 +20,8 @@ use vars qw( %Lexicon );
     'It is not checked-out yet.'    => 'まだチェックアウトされていません。',
     "That you want to override the check out, there is a risk of losing the other user's changes."  => 'チェックアウトを上書きすると、他のユーザによる変更内容を上書きする可能性があります。',
     'Checkout Error'        => 'チェックアウトできません。',
+    'Checked-out [_1]'      => 'チェックアウトされた[_1]',
+    'Check-out User'        => 'チェックアウトユーザー',
     # tmpl/checkout_by_others.tmpl
     'Are you sure you want to override really?' => '本当にチェックアウトを上書きしますか？',
     'Checkout [_1]'         => '[_1]のチェックアウト',
