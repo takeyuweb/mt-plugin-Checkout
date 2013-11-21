@@ -109,18 +109,20 @@ sub _save_entry_with_checkout {
     my $app = shift;
     my $id      = $app->param( 'id' );
     my $type    = $app->param( '_type' ) || 'entry';
-    return 1 unless $id;
-    my $entry = MT->model( $type )->load( $id );
-    return 1 unless $entry;
-    
-    if ( checkedout_by_user( $entry ) ) {
-        $app->forward( 'save_entry' );
-    } else {
-        if ( checkedout_by_others( $entry ) ) {
-            $app->forward( 'when_checkedout_by_others' );
+    my $entry = $id ? MT->model( $type )->load( $id ) : undef;
+    if ( $entry ) {
+        if ( checkedout_by_user( $entry ) ) {
+            $app->forward( 'save_entry' );
         } else {
-            $app->forward( 'when_not_checkedout_yet' );
+            if ( checkedout_by_others( $entry ) ) {
+                $app->forward( 'when_checkedout_by_others' );
+            } else {
+                $app->forward( 'when_not_checkedout_yet' );
+            }
         }
+    } else {
+        $app->param( 'checkout', 1 );
+        $app->forward( 'save_entry' );
     }
 }
 
@@ -136,7 +138,10 @@ sub _cb_cms_pre_save_object {
 }
 
 sub _cb_cms_post_save_object {
-    my ( $cb, $app, $object, $org_object ) = @_; 
+    my ( $cb, $app, $object, $org_object ) = @_;
+    if ( my $checkin = $app->param( 'checkout' ) ) {
+        checkout( $object );
+    }
     if ( my $checkin = $app->param( 'checkin' ) ) {
         uncheckout( $object );
     }
