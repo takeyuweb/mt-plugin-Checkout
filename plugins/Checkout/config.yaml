@@ -63,6 +63,14 @@ list_actions:
         checkin:
             label: Check-in
             code: $checkout::Checkout::Plugin::_list_action_checkin_entry
+        force_checkin:
+            label: Check-in (Allow override)
+            code: $checkout::Checkout::Plugin::_list_action_force_checkin_entry
+            continue_prompt_handler: >
+                sub {
+                    my $plugin = MT->component( 'Checkout' );
+                    $plugin->translate( "If you check in to force, other users who have checked it out you will not be able to update." )
+                }
     page:
         checkout:
             label: Check-out
@@ -78,6 +86,14 @@ list_actions:
         checkin:
             label: Check-in
             code: $checkout::Checkout::Plugin::_list_action_checkin_entry
+        force_checkin:
+            label: Check-in (Allow override)
+            code: $checkout::Checkout::Plugin::_list_action_force_checkin_entry
+            continue_prompt_handler: >
+                sub {
+                    my $plugin = MT->component( 'Checkout' );
+                    $plugin->translate( "If you check in to force, other users who have checked it out you will not be able to update." )
+                }
 
 backup_instructions:
     checkout:

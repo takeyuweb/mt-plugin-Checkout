@@ -502,6 +502,17 @@ sub _filter_entry_checkout {
 
 sub _list_action_checkin_entry {
     my $app = shift;
+    __list_action_checkin_entry( $app );
+}
+
+sub _list_action_force_checkin_entry {
+    my $app = shift;
+    __list_action_checkin_entry( $app, 1 );
+}
+
+sub __list_action_checkin_entry {
+    my $app = shift;
+    my ( $force ) = @_;
     $app->setup_filtered_ids
         unless $app->param( 'all_selected' );
     my $user = $app->user or
@@ -513,9 +524,10 @@ sub _list_action_checkin_entry {
     for my $id ( @ids ) {
         my $object = $class->load( $id );
         next unless $object;
+        next if not_checkedout_yet( $object );
         return $app->permission_denied()
             unless $user->permissions( $object->blog_id )->can_edit_entry( $object, $user );
-        $uncheckout_count++ if uncheckout( $object );
+        $uncheckout_count++ if uncheckout( $object, $force );
     }
     $app->add_return_arg( uncheckedout => 1, uncheckout_count => $uncheckout_count );
     return $app->call_return();

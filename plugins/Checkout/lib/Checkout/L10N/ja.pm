@@ -13,6 +13,7 @@ use vars qw( %Lexicon );
     'Check-out'             => 'チェックアウト',
     'Check-out (Allow override)'    => 'チェックアウト（上書きを許可）',
     'Check-in'              => 'チェックアウトの取り消し',
+    'Check-in (Allow override)' => 'チェックアウトの取り消し（強制）',
     # lib/Checkout/Plugin.pm
     'Undo'                  => '取り消し',
     'Override'              => '上書き',
@@ -24,6 +25,7 @@ use vars qw( %Lexicon );
     'It is not checked-out yet.'    => 'まだチェックアウトされていません。',
     'Checked-in now.'       => 'チェックインしました。',
     "That you want to override the check out, there is a risk of losing the other user's changes."  => 'チェックアウトを上書きすると、他のユーザによる変更内容を上書きする可能性があります。',
+    "If you check in to force, other users who have checked it out you will not be able to update."  => '強制的にチェックアウトを取り消すと、それをチェックアウトしている他のユーザが更新できなくなります。',
     'Checkout Error'        => 'チェックアウトできません。',
     'Checked-out [_1]'      => 'チェックアウトされた[_1]',
     'Check-out User'        => 'チェックアウトユーザー',
