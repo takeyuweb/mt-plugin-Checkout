@@ -608,4 +608,13 @@ sub _cb_tp_entry_list_header {
     $param->{ object_label_plural }  = $pkg->class_label_plural;
 }
 
+sub _cb_post_remove_entry {
+    my ( $cb, $obj ) = @_;
+    my $checkout = MT->model( 'checkout' )->fetch_by_object( $obj );
+    if ( $checkout ) {
+        $checkout->remove;
+    }
+    1;
+}
+
 1;

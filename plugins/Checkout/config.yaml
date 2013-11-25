@@ -22,6 +22,8 @@ callbacks:
     MT::App::CMS::cms_post_save.page: $checkout::Checkout::Plugin::_cb_cms_post_save_object
     MT::App::CMS::template_source.entry_list_header: $checkout::Checkout::Plugin::_cb_ts_entry_list_header
     MT::App::CMS::template_param.entry_list_header: $checkout::Checkout::Plugin::_cb_tp_entry_list_header
+    MT::Entry::post_remove: $checkout::Checkout::Plugin::_cb_post_remove_entry
+    MT::Page::post_remove: $checkout::Checkout::Plugin::_cb_post_remove_entry
 
 applications:
     cms:
