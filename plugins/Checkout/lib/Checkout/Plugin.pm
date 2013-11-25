@@ -617,4 +617,43 @@ sub _cb_post_remove_entry {
     1;
 }
 
+sub _cb_cms_filtered_list_param_entry {
+    my $cb = shift;
+    my ( $app, $res, $objs ) = @_;
+    my $columns = $res->{ columns } or return;
+    my $rows = $res->{ objects } or return;
+    my @columns = split ',', $columns;
+    my $checkout_status = sub {
+        my ( $obj ) = @_;
+        my $class = $obj->class;
+        my $class_label = $obj->class_label;
+        my $checkout_status_icon;
+        if ( checkedout_by_user( $obj ) ) {
+            $checkout_status_icon = 'checkout1.png';
+        } elsif ( checkedout_by_others( $obj ) ) {
+            $checkout_status_icon = 'checkout2.png';
+        }
+        if ( $checkout_status_icon ) {
+            my $checkout_status_icon_url = MT->static_path . 'plugins/Checkout/images/' . $checkout_status_icon;
+            qq{
+<span class="checkout-status">
+<img alt="Checkout $class_label" src="$checkout_status_icon_url" />
+</span>
+};
+        } else {
+            return '';
+        }
+    };
+    for ( my $i=0; $i<@columns; $i++ ) {
+        if ( $columns[$i] eq 'title' ) {
+            for ( my $row_idx=0; $row_idx<@$rows; $row_idx++ ) {
+                my $row = $rows->[$row_idx];
+                my $obj = $objs->[$row_idx];
+                my $checkout_status_label = $checkout_status->( $obj );
+                $row->[$i+1] =~ s|(<span class="title">.+?</span>)|$checkout_status_label$1|s;
+            }
+        }
+    }
+}
+
 1;

@@ -24,6 +24,8 @@ callbacks:
     MT::App::CMS::template_param.entry_list_header: $checkout::Checkout::Plugin::_cb_tp_entry_list_header
     MT::Entry::post_remove: $checkout::Checkout::Plugin::_cb_post_remove_entry
     MT::Page::post_remove: $checkout::Checkout::Plugin::_cb_post_remove_entry
+    cms_filtered_list_param.entry: $checkout::Checkout::Plugin::_cb_cms_filtered_list_param_entry
+    cms_filtered_list_param.page: $checkout::Checkout::Plugin::_cb_cms_filtered_list_param_entry
 
 applications:
     cms:
