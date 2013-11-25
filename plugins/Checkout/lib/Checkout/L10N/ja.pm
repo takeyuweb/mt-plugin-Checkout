@@ -31,6 +31,7 @@ use vars qw( %Lexicon );
     'Checked-in of the [_1] [_2].'  => '[_2]件の[_1]のチェックアウトを取り消しました。',
     '[_1] can be checked-out does not exist.'   => 'チェックアウトできる[_1]がありませんでした。',
     '[_1] can be checked-in does not exist.'    => 'チェックアウト済みの[_1]がありませんでした。',
+    'Update without Check-out'  => 'チェックアウトせずに更新',
     # tmpl/checkout_by_others.tmpl
     'Are you sure you want to override really?' => '本当にチェックアウトを上書きしますか？',
     'Checkout [_1]'         => '[_1]のチェックアウト',

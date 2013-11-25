@@ -60,6 +60,11 @@ MTML
             <li><input type="checkbox" name="checkin" id="checkin" value="1"<mt:if name="checkin"> checked="checked"</mt:if> class="cb" /> <label for="checkin"><__trans phrase="Checkin"></label></li>
         <ul>
     </mt:If>
+    <mt:if name="not_checkedout_yet">
+        <ul>
+            <li><input type="checkbox" name="withoutcheckout" id="withoutcheckout" value="1"<mt:if name="withoutcheckout"> checked="checked"</mt:if> class="cb" /> <label for="withoutcheckout"><__trans phrase="Update without Check-out"></label></li>
+        <ul>
+    </mt:if>
 </__trans_section>
 MTML
     $$tmpl =~ s/(<div class="actions-bar">)/$checkin$1/;
@@ -93,16 +98,20 @@ sub _cb_tp_edit_entry {
         $param->{ not_checkedout_yet } = 1;
     }
     $param->{ checkin } = $app->param( 'checkin' );
+    $param->{ withoutcheckout } = $app->param( 'withoutcheckout' );
     1;
 }
 
 sub _cb_tp_preview_strip {
     my ( $cb, $app, $param, $tmpl ) = @_;
-    my $input = {
+    push( @{ $param->{ 'entry_loop' } }, {
         'data_name' => 'checkin',
         'data_value' => $app->param( 'checkin' ),
-    };
-    push( @{ $param->{ 'entry_loop' } }, $input );
+    } );
+    push( @{ $param->{ 'entry_loop' } }, {
+        'data_name' => 'withoutcheckout',
+        'data_value' => $app->param( 'withoutcheckout' ),
+    } );
 }
 
 sub _save_entry_with_checkout {
@@ -111,7 +120,8 @@ sub _save_entry_with_checkout {
     my $type    = $app->param( '_type' ) || 'entry';
     my $entry = $id ? MT->model( $type )->load( $id ) : undef;
     if ( $entry ) {
-        if ( checkedout_by_user( $entry ) ) {
+        if ( $app->param( 'withoutcheckout' ) ||
+            checkedout_by_user( $entry ) ) {
             $app->forward( 'save_entry' );
         } else {
             if ( checkedout_by_others( $entry ) ) {
